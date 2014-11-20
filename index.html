@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>Hoverbox Image Gallery</title>
+<link rel="stylesheet" href='css/hoverbox.css' type="text/css" media="screen, projection" />
+<!--[if lte IE 7]>
+<link rel="stylesheet" href='css/ie_fixes.css' type="text/css" media="screen, projection" />
+<![endif]-->
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script type="text/javascript">
+
+function gup(name){
+	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");  
+	var regexS = "[\\?&]"+name+"=([^&#]*)";  
+	var regex = new RegExp( regexS );  
+	var results = regex.exec( window.location.href ); 
+ 	if( results == null )    return "";  
+	else    return results[1];
+}
+
+function getHostName(server) {
+	var scatter = server.split(".");
+	var host = scatter.pop();
+	return host;
+}
+
+function getHostNamePos(server,offset) {
+	var scatter = server.split(".");
+	return scatter.length+offset;
+}
+
+
+function getNamePath(server) {
+	switch (true) {
+		case /^ea/.test(server):
+			name_path="servers.es.ebayanuncios.ams01.main.";
+			break;
+		case /^lq/.test(server):
+			name_path="servers.com.loquo.ams01.main.";
+			break;
+		case /^ki/.test(server):
+			name_path="servers.it.annunci.ams01.main.";
+			break;
+		default:
+			var scatter = server.split(".");
+			var host = scatter.pop();
+			var name_path = scatter.join(".")+'.';
+	}
+	return name_path;
+}
+
+function getGraphiteHost(server) {
+	var host = getHostName(server)
+	switch (true) {
+		case /^ea/.test(host):
+			graphite_host="http://graphite.lq.ecg.so";
+			break;
+		case /^lq/.test(host):
+			graphite_host="http://graphite.lq.ecg.so";
+			break;
+		case /^ki-qa/.test(host):
+			graphite_host="http://graphite.qa.ki.ecg.so";
+			break;
+		case /^ki/.test(host):
+			graphite_host="http://graphite.ki.ecg.so";
+			break;
+		case /^mobile/.test(server):
+			graphite_host="https://graphite.corp.mobile.de";
+			break;
+		case /^ebayk/.test(server):
+			graphite_host="https://graphite.corp.mobile.de";
+			break;
+		default:
+			graphite_host="http://graphite.ki.ecg.so";
+	}
+	return graphite_host;
+}
+
+
+function getThumbParam(no) {
+	var param = "width=400&height=300&colorList=00A0B0,6A4A3C,CC333F,EB6841,EDC951,C8CF02,1693A7&hideLegend=true&";
+	param = "488C13,1B55C0,DA4B0F,E9B104,97080E";
+	return "width=200&height=150&bgcolor=000000&fgcolor=C0C0C0&colorList=488C13,1B55C0,DA4B0F,E9B104,97080E&hideLegend=true&yMin=0&graphOnly=true&";
+}
+
+function getPreviewParam(no) {
+	var param = "width=600&height=450&colorList=488C13,1B55C0,DA4B0F,E9B104,97080E&yMin=0&";
+	return "width=400&height=300&bgcolor=000000&fgcolor=C0C0C0&colorList=488C13,1B55C0,DA4B0F,E9B104,97080E&yMin=0&fontSize=9&";
+}
+
+function createGraphiteURLCPU(server, timeframe) {
+	var a = ["system", "user", "nice", "idle", "iowait", "irq", "softirq"];
+	var target = "";
+	a.forEach(function(entry) {
+    	target += '&target=aliasByNode(stacked(scaleToSeconds(nonNegativeDerivative('+getNamePath(server)+getHostName(server)+'.system.cpu.'+entry+'),1)),'+getHostNamePos(server,2)+')'
+	});
+	var str = '<li><a href="#"><img src="'+getGraphiteHost(server)+'/render/?'+getThumbParam()+'yMin=0&title=CPU '+getHostName(server)+'&from='+timeframe+target+'" alt="'+getHostName(server)+'"/><img src="'+getGraphiteHost(server)+'/render/?'+getPreviewParam()+'yMin=0&title=CPU '+getHostName(server)+'&from='+timeframe+target+'" alt="'+getHostName(server)+'" class="preview" /></a> </li>' 
+	
+	return str;
+}
+
+function createGraphiteURLMEM(server, timeframe) {
+	var a = ["apps", "cached", "buffers", "free", "slab"];
+	var target = "";
+	a.forEach(function(entry) {
+    	target += '&target=aliasByNode(stacked('+getNamePath(server)+getHostName(server)+'.system.memory.'+entry+'),'+getHostNamePos(server,2)+')'
+	});
+	var str = '<li><a href="#"><img src="'+getGraphiteHost(server)+'/render/?'+getThumbParam()+'title=MEM '+getHostName(server)+'&from='+timeframe+target+'"/><img src="'+getGraphiteHost(server)+'/render/?'+getPreviewParam()+'title=MEM '+getHostName(server)+'&from='+timeframe+target+'" alt="'+getHostName(server)+'" class="preview" /></a> </li>'
+	
+	return str;
+}
+
+function createGraphiteURLDisk(server, timeframe) {
+	var str = '<li><a href="#"><img src="'+getGraphiteHost(server)+'/render/?'+getThumbParam()+'yMax=100&lineWidth=3&title=Disk usage '+getHostName(server)+'&from='+timeframe+'&target=aliasByNode('+getNamePath(server)+getHostName(server)+'.disk.df._dev_sd*,'+getHostNamePos(server,2)+')" alt="'+getHostName(server)+'"/><img src="'+getGraphiteHost(server)+'/render/?'+getPreviewParam()+'yMax=100&lineWidth=5&title=Disk '+getHostName(server)+'&from='+timeframe+'&target=aliasByNode('+getNamePath(server)+getHostName(server)+'.disk.df._dev_sd*,'+getHostNamePos(server,2)+')" alt="'+getHostName(server)+'" class="preview" /></a> </li>'
+	return str;
+}
+
+function createGraphiteURLMisc(server, timeframe) {
+	var str = '<li><a href="#"><img src="'+getGraphiteHost(server)+'/render/?'+getThumbParam()+'lineWidth=1&title=Interupts and swap '+getHostName(server)+'&from='+timeframe+'&target=aliasByNode(scaleToSeconds(nonNegativeDerivative('+getNamePath(server)+getHostName(server)+'.system.interrupts.*),1),'+getHostNamePos(server,1)+','+getHostNamePos(server,2)+')&target=aliasByNode(secondYAxis(scaleToSeconds(nonNegativeDerivative('+getNamePath(server)+getHostName(server)+'.system.swap.swap*),1)),'+getHostNamePos(server,2)+')&yMaxRight=10" alt="'+getHostName(server)+'"/><img src="'+getGraphiteHost(server)+'/render/?'+getPreviewParam()+'lineWidth=1&title=Interupts and swap '+getHostName(server)+'&from='+timeframe+'&target=aliasByNode(scaleToSeconds(nonNegativeDerivative('+getNamePath(server)+getHostName(server)+'.system.interrupts.*),1),'+getHostNamePos(server,1)+','+getHostNamePos(server,2)+')&target=aliasByNode(secondYAxis(scaleToSeconds(nonNegativeDerivative('+getNamePath(server)+getHostName(server)+'.system.swap.swap*),1)),'+getHostNamePos(server,2)+')&yMaxRight=10" alt="'+getHostName(server)+'" class="preview" /></a> </li>'
+	return str;
+}
+
+</script>
+</head>
+<body>
+
+<div id="hosts"></div>
+
+<script type="text/javascript">
+
+var url = "http://graphite.lq.ecg.so/metrics/find/?_dc=1377528290077&query=servers.com.loquo.ams01.main.*&format=treejson&contexts=1&path=servers.com.loquo.ams01.main&node=servers.com.loquo.ams01.main";
+
+	if (gup('server_list')) { 
+		url = gup('server_list') 
+	} else {
+		url = "./server.json"
+	}
+	if (gup('from')) { 
+		from = gup('from') 
+	} else {
+		from = "-2days"
+	}
+
+
+
+$.getJSON( url, function( data ) {
+	console.log( "JSON request succeded");
+	
+	var groups = {}, hosts = new Array(), i, l = data.length, group, server;
+    for (i = 0; i < l; i ++) {
+    	server = data[i].text;
+        group = server.substring(0, server.search(/[0-9]/g));
+		//console.log(server+':'+group);
+        if (!groups[group]) {
+        	//console.log('initialize for group '+group);	
+        	groups[group] = [];
+        }
+
+        groups[group].push(data[i].id);
+        //console.log(groups.toSource());
+    }
+    for (var k in groups) {
+    	//console.log('group:'+k);
+    	if (groups.hasOwnProperty(k)) {
+        	//console.log(groups[k].join(":"));
+        	<!-- document.write('<p><h1>'+k+'</h1><ul class="hoverbox">'); -->
+			
+			var hosts = groups[k]; len=hosts.length;
+			var out = '<p> <h1>'+k+'</h1> <ul class="hoverbox">';						
+			console.log("creating graphs for:"+k);
+			
+			//console.log(hosts+': '+len);
+			for (i=0; i<len; i++) {
+				out += createGraphiteURLCPU(hosts[i],from);
+				out += createGraphiteURLMEM(hosts[i],from);
+				out += createGraphiteURLDisk(hosts[i],from);
+				out += createGraphiteURLMisc(hosts[i],from);			
+				<!-- document.write(createGraphiteURLhost(hosts[i],"-2days")); -->
+				//console.log(hosts[i]);
+				//console.log("for loop writing hosts");
+			}
+			out += ' </ul> ';
+       		$(out).insertBefore( "#hosts" );
+       	}
+
+
+	}
+   
+});
+</script>
+
+<p id="footer"><a href="https://github.scm.corp.ebay.com/jobauer/hoverbox">Github</a> | <a href="http://graphite.wikidot.com">Graphite</a> | <a href="http://sonspring.com/journal/hoverbox-image-gallery">Hoverbox</a>.</p>
+</body>
+</html>
