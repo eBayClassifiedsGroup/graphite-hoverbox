@@ -32,47 +32,21 @@ function getHostNamePos(server,offset) {
 
 
 function getNamePath(server) {
-	switch (true) {
-		case /^ea/.test(server):
-			name_path="servers.es.ebayanuncios.ams01.main.";
-			break;
-		case /^lq/.test(server):
-			name_path="servers.com.loquo.ams01.main.";
-			break;
-		case /^ki/.test(server):
-			name_path="servers.it.annunci.ams01.main.";
-			break;
-		default:
-			var scatter = server.split(".");
-			var host = scatter.pop();
-			var name_path = scatter.join(".")+'.';
-	}
+	var scatter = server.split(".");
+	var host = scatter.pop();
+	var name_path = scatter.join(".")+'.';
+	
 	return name_path;
 }
 
 function getGraphiteHost(server) {
 	var host = getHostName(server)
 	switch (true) {
-		case /^ea/.test(host):
-			graphite_host="http://graphite.lq.ecg.so";
-			break;
-		case /^lq/.test(host):
-			graphite_host="http://graphite.lq.ecg.so";
-			break;
-		case /^ki-qa/.test(host):
-			graphite_host="http://graphite.qa.ki.ecg.so";
-			break;
-		case /^ki/.test(host):
-			graphite_host="http://graphite.ki.ecg.so";
-			break;
 		case /^mobile/.test(server):
-			graphite_host="https://graphite.corp.mobile.de";
-			break;
-		case /^ebayk/.test(server):
-			graphite_host="https://graphite.corp.mobile.de";
+			graphite_host="https://graphite.yourothergraphiteinstance.com";
 			break;
 		default:
-			graphite_host="http://graphite.ki.ecg.so";
+			graphite_host="http://graphite.yourdomain.com";
 	}
 	return graphite_host;
 }
@@ -128,8 +102,6 @@ function createGraphiteURLMisc(server, timeframe) {
 <div id="hosts"></div>
 
 <script type="text/javascript">
-
-var url = "http://graphite.lq.ecg.so/metrics/find/?_dc=1377528290077&query=servers.com.loquo.ams01.main.*&format=treejson&contexts=1&path=servers.com.loquo.ams01.main&node=servers.com.loquo.ams01.main";
 
 	if (gup('server_list')) { 
 		url = gup('server_list') 
@@ -190,6 +162,6 @@ $.getJSON( url, function( data ) {
 });
 </script>
 
-<p id="footer"><a href="https://github.scm.corp.ebay.com/jobauer/hoverbox">Github</a> | <a href="http://graphite.wikidot.com">Graphite</a> | <a href="http://sonspring.com/journal/hoverbox-image-gallery">Hoverbox</a>.</p>
+<p id="footer"><a href="https://github.com/eBayClassifiedsGroup/graphite-hoverbox">Github</a> | <a href="http://graphite.wikidot.com">Graphite</a> | <a href="http://sonspring.com/journal/hoverbox-image-gallery">Hoverbox</a>.</p>
 </body>
 </html>
