@@ -8,18 +8,21 @@ requirements:
 - you need a graphite server installed and the API must be available from the client browser
 - CPU, memory, disk, interrupt and swap data are in the format exposed via munin-graphite bridge (can be converted to collectd with some effort)
 
-example:
+install:
+
+- clone and edit index.html to set graphite host and naming schema of your graphite instance (if needed) 
+- in case you dont have a server installation, you need to pull the list of servers in a local json file
+a json file can be generated with curl, e.g.:
+
+	curl -k -o server-test.json "https://graphite.yourdomain.com/metrics/find/?query=path.to.*.server*&format=treejson"
+
+In case of server installation on the graphite host, you can also fetch json directly from graphite.
+
+Then open index.html file in browser:
 
 file:///Users/jobauer/workspace/hoverbox/index.html?server_list=./server-test.json&from=-1day
 
-install:
-
-clone and edit index.html to set local json file. No server installation needed, just open local file in your browser.
-json file can be generated with curl, e.g.:
-
-	curl -k -o server-test.json "https://graphite.yourdomain.com/metrics/find/?query=servers.*.*&format=treejson"
-
-In case of server installation on the graphite host, you can also fetch json directly from graphite.
+and you should see this:
 
 screenshot:
 <img src="screenshot/graphite-hoverbox.png">
